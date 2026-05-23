@@ -1936,43 +1936,163 @@ function MeteoSection() {
 }
 
 // ─── NUDOS ────────────────────────────────────────────────────────────────────
-// Imágenes reales de nudos desde Wikimedia Commons (licencia libre)
-const KNOT_IMAGES = {
-  as:            "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bowline.svg/320px-Bowline.svg.png",
-  ocho:          "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Figure-eight_knot.svg/320px-Figure-eight_knot.svg.png",
-  ballestrinque: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Clove_hitch.svg/320px-Clove_hitch.svg.png",
-  correa:        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Sheetbendwithdrawing.png/320px-Sheetbendwithdrawing.png",
-  vueltaRedonda: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Round_turn_and_two_half_hitches.svg/320px-Round_turn_and_two_half_hitches.svg.png",
-  escota:        "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Sheet_bend.svg/320px-Sheet_bend.svg.png",
-  cote:          "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Halfhitch.svg/320px-Halfhitch.svg.png",
-  dobleAs:       "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Double_bowline.svg/320px-Double_bowline.svg.png",
-};
+// Nudos dibujados como SVG con efecto de cuerda (por-encima/por-debajo)
+const KnotSVG = ({ type, size = 110 }) => {
+  // Helpers: pinta una cuerda con efecto 3D (borde oscuro + relleno claro)
+  const ropeColor = "#c89a3a";       // dorado cuerda
+  const ropeDark = "#7a5818";        // sombra
+  const ropeWidth = 9;
+  const ropeStroke = 11;             // borde exterior
+  const objectColor = "#3a5a8a";     // pilón, argolla...
 
-const KnotSVG = ({ type, size = 100 }) => {
-  const src = KNOT_IMAGES[type];
-  if (!src) return null;
+  const renderKnot = () => {
+    switch(type) {
+      case "as": // As de guía (bowline)
+        return (
+          <>
+            {/* Línea principal hacia abajo */}
+            <path d="M 20 90 Q 20 60, 35 50" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 20 90 Q 20 60, 35 50" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            {/* Gaza grande (loop) */}
+            <ellipse cx="55" cy="60" rx="25" ry="20" stroke={ropeDark} strokeWidth={ropeStroke} fill="none"/>
+            <ellipse cx="55" cy="60" rx="25" ry="20" stroke={ropeColor} strokeWidth={ropeWidth} fill="none"/>
+            {/* Pequeño bucle del nudo arriba */}
+            <ellipse cx="55" cy="38" rx="10" ry="8" stroke={ropeDark} strokeWidth={ropeStroke} fill="none"/>
+            <ellipse cx="55" cy="38" rx="10" ry="8" stroke={ropeColor} strokeWidth={ropeWidth} fill="none"/>
+            {/* Cabo libre que sale del nudo */}
+            <path d="M 55 30 Q 65 20, 75 22" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 55 30 Q 65 20, 75 22" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+          </>
+        );
+
+      case "ocho": // Nudo de ocho (figure-eight)
+        return (
+          <>
+            {/* Cabo de entrada */}
+            <path d="M 15 85 Q 30 80, 35 70" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 15 85 Q 30 80, 35 70" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            {/* Bucle inferior */}
+            <ellipse cx="55" cy="65" rx="22" ry="14" stroke={ropeDark} strokeWidth={ropeStroke} fill="none"/>
+            <ellipse cx="55" cy="65" rx="22" ry="14" stroke={ropeColor} strokeWidth={ropeWidth} fill="none"/>
+            {/* Bucle superior (cruzando) */}
+            <ellipse cx="55" cy="35" rx="22" ry="14" stroke={ropeDark} strokeWidth={ropeStroke} fill="none"/>
+            <ellipse cx="55" cy="35" rx="22" ry="14" stroke={ropeColor} strokeWidth={ropeWidth} fill="none"/>
+            {/* Cabo final */}
+            <path d="M 75 20 Q 85 18, 95 22" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 75 20 Q 85 18, 95 22" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+          </>
+        );
+
+      case "ballestrinque": // Clove hitch
+        return (
+          <>
+            {/* Pilón/poste horizontal */}
+            <rect x="5" y="42" width="100" height="16" fill={objectColor} stroke="#1a3050" strokeWidth="1.5" rx="2"/>
+            <rect x="5" y="42" width="100" height="4" fill="rgba(255,255,255,0.15)"/>
+            {/* Primera vuelta */}
+            <path d="M 30 60 Q 25 75, 40 75 Q 55 75, 55 60" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 30 60 Q 25 75, 40 75 Q 55 75, 55 60" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            <path d="M 30 40 Q 25 25, 40 25 Q 55 25, 55 40" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 30 40 Q 25 25, 40 25 Q 55 25, 55 40" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            {/* Segunda vuelta cruzada */}
+            <path d="M 55 40 L 75 60" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 55 40 L 75 60" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            <path d="M 75 40 Q 80 28, 92 32" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 75 40 Q 80 28, 92 32" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            <path d="M 75 60 Q 80 72, 92 68" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 75 60 Q 80 72, 92 68" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+          </>
+        );
+
+      case "correa":
+      case "escota": // Sheet bend
+        return (
+          <>
+            {/* Cabo grueso (azul) formando gaza */}
+            <path d="M 5 30 Q 30 30, 45 45 Q 55 55, 45 65 Q 30 75, 5 70"
+                  stroke="#1a3a6a" strokeWidth="14" fill="none" strokeLinecap="round"/>
+            <path d="M 5 30 Q 30 30, 45 45 Q 55 55, 45 65 Q 30 75, 5 70"
+                  stroke="#4a7ab8" strokeWidth="11" fill="none" strokeLinecap="round"/>
+            {/* Cabo delgado (dorado) que entra por la gaza */}
+            <path d="M 100 25 Q 80 30, 60 40" stroke={ropeDark} strokeWidth={ropeStroke-1} fill="none" strokeLinecap="round"/>
+            <path d="M 100 25 Q 80 30, 60 40" stroke={ropeColor} strokeWidth={ropeWidth-1} fill="none" strokeLinecap="round"/>
+            <path d="M 60 40 Q 50 50, 60 60" stroke={ropeDark} strokeWidth={ropeStroke-1} fill="none" strokeLinecap="round"/>
+            <path d="M 60 40 Q 50 50, 60 60" stroke={ropeColor} strokeWidth={ropeWidth-1} fill="none" strokeLinecap="round"/>
+            <path d="M 60 60 Q 75 70, 95 75" stroke={ropeDark} strokeWidth={ropeStroke-1} fill="none" strokeLinecap="round"/>
+            <path d="M 60 60 Q 75 70, 95 75" stroke={ropeColor} strokeWidth={ropeWidth-1} fill="none" strokeLinecap="round"/>
+          </>
+        );
+
+      case "vueltaRedonda": // Round turn + 2 half hitches
+        return (
+          <>
+            {/* Argolla/poste vertical */}
+            <circle cx="35" cy="55" r="24" fill="none" stroke={objectColor} strokeWidth="6"/>
+            <circle cx="35" cy="55" r="24" fill="none" stroke="#1a3050" strokeWidth="1"/>
+            {/* Vuelta redonda al poste */}
+            <ellipse cx="35" cy="55" rx="30" ry="14" stroke={ropeDark} strokeWidth={ropeStroke} fill="none"/>
+            <ellipse cx="35" cy="55" rx="30" ry="14" stroke={ropeColor} strokeWidth={ropeWidth} fill="none"/>
+            {/* Dos cotes */}
+            <path d="M 65 55 Q 80 45, 80 55 Q 80 65, 70 60" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 65 55 Q 80 45, 80 55 Q 80 65, 70 60" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            <path d="M 80 55 Q 95 50, 95 60 Q 95 70, 85 65" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 80 55 Q 95 50, 95 60 Q 95 70, 85 65" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+          </>
+        );
+
+      case "cote": // Half hitch
+        return (
+          <>
+            {/* Cabo principal horizontal */}
+            <path d="M 5 50 L 50 50" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 5 50 L 50 50" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            {/* El medio cote (bucle) */}
+            <ellipse cx="65" cy="50" rx="18" ry="22" stroke={ropeDark} strokeWidth={ropeStroke} fill="none"/>
+            <ellipse cx="65" cy="50" rx="18" ry="22" stroke={ropeColor} strokeWidth={ropeWidth} fill="none"/>
+            {/* Cabo final */}
+            <path d="M 70 30 Q 90 25, 100 30" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 70 30 Q 90 25, 100 30" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+          </>
+        );
+
+      case "dobleAs": // Double bowline
+        return (
+          <>
+            {/* Línea principal hacia abajo */}
+            <path d="M 15 95 Q 15 70, 30 55" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 15 95 Q 15 70, 30 55" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+            {/* Doble gaza */}
+            <ellipse cx="55" cy="70" rx="28" ry="18" stroke={ropeDark} strokeWidth={ropeStroke} fill="none"/>
+            <ellipse cx="55" cy="70" rx="28" ry="18" stroke={ropeColor} strokeWidth={ropeWidth} fill="none"/>
+            <ellipse cx="55" cy="70" rx="20" ry="11" stroke={ropeDark} strokeWidth={ropeStroke-2} fill="none"/>
+            <ellipse cx="55" cy="70" rx="20" ry="11" stroke={ropeColor} strokeWidth={ropeWidth-2} fill="none"/>
+            {/* Bucle del nudo */}
+            <ellipse cx="55" cy="42" rx="11" ry="9" stroke={ropeDark} strokeWidth={ropeStroke} fill="none"/>
+            <ellipse cx="55" cy="42" rx="11" ry="9" stroke={ropeColor} strokeWidth={ropeWidth} fill="none"/>
+            {/* Cabo libre */}
+            <path d="M 55 33 Q 70 22, 85 25" stroke={ropeDark} strokeWidth={ropeStroke} fill="none" strokeLinecap="round"/>
+            <path d="M 55 33 Q 70 22, 85 25" stroke={ropeColor} strokeWidth={ropeWidth} fill="none" strokeLinecap="round"/>
+          </>
+        );
+
+      default: return null;
+    }
+  };
+
   return (
     <div style={{
       width: size,
       height: size,
       background: '#f5ead0',
       borderRadius: 6,
+      padding: 4,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 4,
-      overflow: 'hidden',
     }}>
-      <img
-        src={src}
-        alt=""
-        style={{
-          maxWidth: '100%',
-          maxHeight: '100%',
-          objectFit: 'contain',
-        }}
-        loading="lazy"
-      />
+      <svg viewBox="0 0 110 100" width="100%" height="100%" style={{maxWidth: size - 8, maxHeight: size - 8}}>
+        {renderKnot()}
+      </svg>
     </div>
   );
 };
@@ -2179,7 +2299,7 @@ export default function App() {
         <div className="header">
           <div className="header-compass">🧭</div>
           <div>
-            <div className="header-title">JM Náutica</div>
+            <div className="header-title">Náutica Leviathán</div>
             <div className="header-sub">Guía de Navegación de Bolsillo</div>
           </div>
         </div>
