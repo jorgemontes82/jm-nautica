@@ -1587,25 +1587,32 @@ function MeteoSection() {
   ];
 
   const tabs = [
-    { id:"sada",     label:"⚓ Sada ahora" },
+    { id:"puerto",   label:"⚓ Puerto" },
     { id:"beaufort", label:"Escala Beaufort" },
     { id:"nubes",    label:"Nubes" },
     { id:"frentes",  label:"Frentes" },
   ];
+
+  const PUERTOS = [
+    { id:"sada",     nombre:"Sada",     lat:43.358, lon:-8.247, zona:"Ría de Betanzos · A Coruña" },
+    { id:"combarro", nombre:"Combarro", lat:42.435, lon:-8.703, zona:"Ría de Pontevedra · Pontevedra" },
+  ];
+  const [puerto, setPuerto] = useState("sada");
 
   // ── Predicción real Sada via Anthropic API ────────────────────────────────
   const [wx, setWx] = useState(null);
   const [wxLoading, setWxLoading] = useState(false);
   const [wxError, setWxError] = useState(null);
 
-  const fetchSada = async () => {
+  const fetchWeather = async () => {
     setWxLoading(true);
     setWxError(null);
     setWx(null);
     try {
+      const p = PUERTOS.find(x => x.id === puerto);
       const params = new URLSearchParams({
-        latitude: "43.358",
-        longitude: "-8.247",
+        latitude: String(p.lat),
+        longitude: String(p.lon),
         hourly: "temperature_2m,precipitation_probability,precipitation,windspeed_10m,winddirection_10m,windgusts_10m,weathercode",
         current_weather: "true",
         wind_speed_unit: "kn",
@@ -1688,8 +1695,9 @@ function MeteoSection() {
   };
 
   useEffect(() => {
-    if (tab === "sada" && !wx && !wxLoading) fetchSada();
-  }, [tab]);
+    if (tab === "puerto") fetchWeather();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, puerto]);
 
   const beaufortNum = (kn) => {
     if (kn < 1) return 0; if (kn < 4) return 1; if (kn < 7) return 2;
@@ -1729,9 +1737,9 @@ function MeteoSection() {
   return (
     <div>
       <div className="section-title">Meteo</div>
-      <div className="section-sub">Meteorología náutica — Sada, Ría de Betanzos</div>
+      <div className="section-sub">Meteorología náutica — Predicción en tiempo real</div>
       <div className="info-box">
-        🌬️ Predicción horaria para Sada vía Open-Meteo. Beaufort calculado del viento a 10m. Consulta también Meteomar AEMET en VHF 26/27.
+        🌬️ Predicción horaria vía Open-Meteo. Beaufort calculado del viento a 10m. Consulta también Meteomar AEMET en VHF 26/27.
       </div>
 
       <div style={{display:'flex', gap:6, marginBottom:16, flexWrap:'wrap'}}>
@@ -1747,31 +1755,54 @@ function MeteoSection() {
         ))}
       </div>
 
-      {tab==="sada" && (
+      {tab==="puerto" && (
         <div>
-          {wxLoading && (
-            <div style={{textAlign:'center', padding:40, color:'#c8a84b', fontSize:13}}>
-              <div style={{fontSize:36, marginBottom:12}}>⚓</div>
-              <div>Consultando predicción de Sada...</div>
-              <div style={{fontSize:10, color:'#8ba3c0', marginTop:6}}>Buscando datos meteorológicos actuales</div>
-            </div>
-          )}
+          {/* Selector de puerto */}
+          <div style={{display:'flex', gap:8, marginBottom:14, flexWrap:'wrap'}}>
+            {PUERTOS.map(p => (
+              <button key={p.id} onClick={()=>setPuerto(p.id)} style={{
+                flex:'1 1 auto',
+                background: puerto===p.id ? 'rgba(200,168,75,0.15)' : '#0d1f3a',
+                border:`1px solid ${puerto===p.id ? '#c8a84b' : '#1a3050'}`,
+                borderLeft: `4px solid ${puerto===p.id ? '#c8a84b' : '#1a3050'}`,
+                borderRadius:6, padding:'10px 14px', cursor:'pointer',
+                textAlign:'left', transition:'all 0.15s',
+                fontFamily:"'Source Code Pro',monospace",
+                minWidth: 140,
+              }}>
+                <div style={{fontSize:13, fontWeight:700, color: puerto===p.id ? '#c8a84b' : '#d4c49a'}}>⚓ {p.nombre}</div>
+                <div style={{fontSize:10, color:'#8ba3c0', marginTop:2}}>{p.zona}</div>
+              </button>
+            ))}
+          </div>
+
+          {wxLoading && (() => {
+            const p = PUERTOS.find(x => x.id === puerto);
+            return (
+              <div style={{textAlign:'center', padding:40, color:'#c8a84b', fontSize:13}}>
+                <div style={{fontSize:36, marginBottom:12}}>⚓</div>
+                <div>Consultando predicción de {p.nombre}...</div>
+                <div style={{fontSize:10, color:'#8ba3c0', marginTop:6}}>Buscando datos meteorológicos actuales</div>
+              </div>
+            );
+          })()}
           {wxError && (
             <div style={{background:'rgba(204,34,34,0.1)', border:'1px solid #cc2222', borderRadius:8, padding:16, marginBottom:12, fontSize:12, color:'#ffaaaa'}}>
               {wxError}
-              <button onClick={fetchSada} style={{display:'block', marginTop:10, background:'#cc2222', color:'#fff', border:'none', borderRadius:4, padding:'6px 14px', cursor:'pointer', fontSize:11}}>Reintentar</button>
+              <button onClick={fetchWeather} style={{display:'block', marginTop:10, background:'#cc2222', color:'#fff', border:'none', borderRadius:4, padding:'6px 14px', cursor:'pointer', fontSize:11}}>Reintentar</button>
             </div>
           )}
           {wx && !wxLoading && (() => {
             const a = wx.ahora;
             const col = bftColor(a.beaufort);
+            const p = PUERTOS.find(x => x.id === puerto);
             return (
               <div>
                 {/* NOW card */}
                 <div style={{background:'linear-gradient(135deg,#0d1f3a,#0a1828)', border:`1px solid ${col}`, borderRadius:12, padding:18, marginBottom:16}}>
                   <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12}}>
                     <div>
-                      <div style={{fontSize:11, color:'#8ba3c0', letterSpacing:2, marginBottom:2}}>AHORA · SADA</div>
+                      <div style={{fontSize:11, color:'#8ba3c0', letterSpacing:2, marginBottom:2}}>AHORA · {p.nombre.toUpperCase()}</div>
                       <div style={{fontFamily:"'Playfair Display',serif", fontSize:32, color:'#d4c49a'}}>{a.temp}°C</div>
                       <div style={{fontSize:13, color:'#bccfe0', marginTop:3}}>{a.icono} {a.estado}</div>
                     </div>
@@ -1832,8 +1863,8 @@ function MeteoSection() {
                   })}
                 </div>
                 <div style={{textAlign:'right', fontSize:9, color:'#6080a0', marginTop:6}}>
-                  Sada · 43.358N 8.247O
-                  <button onClick={fetchSada} style={{marginLeft:10, background:'transparent', border:'1px solid #1a3050', color:'#8ba3c0', borderRadius:3, padding:'2px 8px', cursor:'pointer', fontSize:9}}>↻ Actualizar</button>
+                  {p.nombre} · {p.lat}N {Math.abs(p.lon)}O
+                  <button onClick={fetchWeather} style={{marginLeft:10, background:'transparent', border:'1px solid #1a3050', color:'#8ba3c0', borderRadius:3, padding:'2px 8px', cursor:'pointer', fontSize:9}}>↻ Actualizar</button>
                 </div>
               </div>
             );
@@ -1905,71 +1936,45 @@ function MeteoSection() {
 }
 
 // ─── NUDOS ────────────────────────────────────────────────────────────────────
-const KnotSVG = ({ type }) => {
-  const knots = {
-    as: ( // As de guía (bowline)
-      <svg viewBox="0 0 100 80" width="100" height="80">
-        <path d="M 20 60 C 20 60 25 20 50 30 C 65 36 55 55 45 50 C 35 45 38 32 50 35 C 60 37 58 48 50 45" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 50 45 C 42 42 38 55 50 60 C 62 65 70 55 65 45 C 60 38 50 35 50 35" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 65 45 L 80 40" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 20 60 L 10 65" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-      </svg>
-    ),
-    ocho: ( // Nudo de ocho
-      <svg viewBox="0 0 100 80" width="100" height="80">
-        <path d="M 15 55 C 15 55 20 30 40 35 C 55 38 52 55 40 52 C 28 49 30 35 45 35 C 62 35 70 55 60 62 C 48 70 30 62 25 50 C 18 36 30 22 45 25 C 60 28 72 42 75 52 L 85 58" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    ),
-    ballestrinque: (
-      <svg viewBox="0 0 100 80" width="100" height="80">
-        <rect x="10" y="35" width="80" height="10" rx="5" fill="#2a4060" stroke="#6080a0" strokeWidth="1"/>
-        <path d="M 30 35 C 30 20 50 20 50 35" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 50 35 L 50 45 C 50 60 70 60 70 45" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 70 45 L 70 35 C 70 20 50 20 50 35" fill="none" stroke="#e0d090" strokeWidth="2" strokeDasharray="2,2" strokeLinecap="round"/>
-        <path d="M 30 35 L 15 28" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 70 45 L 85 52" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-      </svg>
-    ),
-    correa: (
-      <svg viewBox="0 0 100 80" width="100" height="80">
-        <path d="M 15 40 L 35 40 C 35 40 38 25 50 25 C 62 25 65 40 65 40 L 85 40" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 35 40 C 35 40 32 55 40 58 C 48 61 55 55 50 45 C 47 38 38 40 38 48 C 38 56 46 60 52 56 C 60 51 58 40 65 40" fill="none" stroke="#e0d090" strokeWidth="2.5" strokeLinecap="round"/>
-      </svg>
-    ),
-    vueltaRedonda: (
-      <svg viewBox="0 0 100 80" width="100" height="80">
-        <rect x="10" y="37" width="80" height="6" rx="3" fill="#2a4060" stroke="#6080a0" strokeWidth="1"/>
-        <path d="M 25 37 C 25 25 40 20 50 25 C 60 30 60 37 60 37" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 60 37 C 60 43 55 50 45 48 C 35 46 30 37 30 43 C 30 55 50 60 65 50 C 75 43 75 37 75 37" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 25 37 L 15 32" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 75 37 L 85 32" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-      </svg>
-    ),
-    escota: (
-      <svg viewBox="0 0 100 80" width="100" height="80">
-        <path d="M 20 30 L 80 30" fill="none" stroke="#3a5a8a" strokeWidth="5" strokeLinecap="round"/>
-        <path d="M 20 50 L 80 50" fill="none" stroke="#3a5a8a" strokeWidth="5" strokeLinecap="round"/>
-        <path d="M 15 65 C 20 65 30 55 30 30" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 30 50 C 30 65 40 70 50 65" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 50 65 L 85 50" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-      </svg>
-    ),
-    cote: (
-      <svg viewBox="0 0 100 80" width="100" height="80">
-        <path d="M 15 40 L 35 40" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 35 40 C 35 25 50 22 55 30 C 60 38 52 45 45 42 C 38 39 40 30 50 30 C 60 30 65 40 60 50 C 55 60 40 62 35 55 C 30 48 32 40 35 40" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 60 50 L 85 50" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-      </svg>
-    ),
-    dobleAs: (
-      <svg viewBox="0 0 100 80" width="100" height="80">
-        <path d="M 10 50 C 15 50 20 35 30 35 C 40 35 42 50 50 50 C 58 50 60 35 70 35 C 80 35 85 50 90 50" fill="none" stroke="#c8a84b" strokeWidth="3" strokeLinecap="round"/>
-        <path d="M 30 35 C 30 25 50 20 50 35" fill="none" stroke="#e0d090" strokeWidth="2" strokeLinecap="round"/>
-        <path d="M 70 35 C 70 25 50 20 50 35" fill="none" stroke="#e0d090" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
-    ),
-  };
-  return knots[type] || null;
+// Imágenes reales de nudos desde Wikimedia Commons (licencia libre)
+const KNOT_IMAGES = {
+  as:            "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Bowline.svg/320px-Bowline.svg.png",
+  ocho:          "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Figure-eight_knot.svg/320px-Figure-eight_knot.svg.png",
+  ballestrinque: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Clove_hitch.svg/320px-Clove_hitch.svg.png",
+  correa:        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Sheetbendwithdrawing.png/320px-Sheetbendwithdrawing.png",
+  vueltaRedonda: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Round_turn_and_two_half_hitches.svg/320px-Round_turn_and_two_half_hitches.svg.png",
+  escota:        "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Sheet_bend.svg/320px-Sheet_bend.svg.png",
+  cote:          "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Halfhitch.svg/320px-Halfhitch.svg.png",
+  dobleAs:       "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Double_bowline.svg/320px-Double_bowline.svg.png",
+};
+
+const KnotSVG = ({ type, size = 100 }) => {
+  const src = KNOT_IMAGES[type];
+  if (!src) return null;
+  return (
+    <div style={{
+      width: size,
+      height: size,
+      background: '#f5ead0',
+      borderRadius: 6,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 4,
+      overflow: 'hidden',
+    }}>
+      <img
+        src={src}
+        alt=""
+        style={{
+          maxWidth: '100%',
+          maxHeight: '100%',
+          objectFit: 'contain',
+        }}
+        loading="lazy"
+      />
+    </div>
+  );
 };
 
 function NudosSection() {
@@ -1997,8 +2002,8 @@ function NudosSection() {
 
       {s && (
         <div style={{background:'rgba(200,168,75,0.07)', border:'1px solid #c8a84b', borderRadius:10, padding:16, marginBottom:16, display:'flex', gap:16, alignItems:'flex-start'}}>
-          <div style={{flexShrink:0, background:'#0d1f3a', borderRadius:8, border:'1px solid #1a3050', padding:4}}>
-            <KnotSVG type={s.id}/>
+          <div style={{flexShrink:0}}>
+            <KnotSVG type={s.id} size={120}/>
           </div>
           <div>
             <div style={{fontFamily:"'Playfair Display',serif", fontSize:17, fontWeight:700, color:'#c8a84b', marginBottom:2}}>{s.nombre}</div>
@@ -2017,9 +2022,7 @@ function NudosSection() {
             borderRadius:8, padding:10, cursor:'pointer',
             display:'flex', flexDirection:'column', alignItems:'center', gap:6, transition:'all 0.15s',
           }}>
-            <div style={{background:'#061020', borderRadius:6, padding:2}}>
-              <KnotSVG type={n.id}/>
-            </div>
+            <KnotSVG type={n.id} size={100}/>
             <div style={{fontSize:11, fontWeight:700, color: sel===i ? '#c8a84b' : '#d4c49a', textAlign:'center', lineHeight:1.3}}>{n.nombre}</div>
             <div style={{fontSize:9, color:'#8ba3c0'}}>{n.dificultad}</div>
           </button>
